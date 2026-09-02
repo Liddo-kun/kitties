@@ -33,7 +33,7 @@ HEART_RATIO = 0.62         # heart height as a fraction of font size
 GAP = 0.8                  # mm between heart and text
 
 # ---------------- QR ----------------
-qr = segno.make(DATA, error=EC, boost_error=False)
+qr = segno.make(DATA, error=EC, boost_error=False, micro=False)  # phones cannot read Micro QR
 assert qr.version <= 2, f"QR too big (version {qr.version}); shorten the URL"
 n = qr.symbol_size(border=0)[0]
 matrix = [list(row) for row in qr.matrix]
