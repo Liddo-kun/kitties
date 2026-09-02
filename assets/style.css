@@ -94,6 +94,22 @@ main {
 
 .btn .num { letter-spacing: .04em; }
 
+/* small contact pills (less prominent than .btn) */
+.contact { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: .02em;
+}
+
 /* ---------- cards ---------- */
 .card {
   background: var(--card);
