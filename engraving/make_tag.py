@@ -22,8 +22,9 @@ FONT = "/usr/share/fonts/truetype/quicksand/Quicksand-Bold.ttf"
 W, H = 16.0, 14.0          # mm, engraving area
 MODULE = None              # mm per QR module (auto: 0.46 for v1, 0.40 for v2)
 QR_TOP = 0.5               # mm quiet zone above QR
-FONT_SIZE = 3.1            # mm (em)
-BASELINE = 13.6            # mm, text baseline
+FONT_MAX = 3.1             # mm (em); shrinks automatically for names with descenders
+TEXT_GAP = 0.8             # mm between QR bottom and tallest glyph
+BOTTOM = 0.4               # mm margin below lowest glyph
 HEART_H = 1.9              # mm
 GAP = 0.8                  # mm between heart and text
 
@@ -61,9 +62,9 @@ font = TTFont(FONT)
 upm = font["head"].unitsPerEm
 cmap = font.getBestCmap()
 gs = font.getGlyphSet()
-scale = FONT_SIZE / upm
 
-paths, x = [], 0
+# glyph outlines + vertical extent of the name (font units, y-up)
+paths, x, ymin, ymax = [], 0, 0, 0
 for ch in NAME:
     g = cmap[ord(ch)]
     pen = SVGPathPen(gs)
@@ -71,7 +72,16 @@ for ch in NAME:
     d = pen.getCommands()
     if d:
         paths.append((x, d))
+        bp = BoundsPen(gs)
+        gs[g].draw(bp)
+        ymin, ymax = min(ymin, bp.bounds[1]), max(ymax, bp.bounds[3])
     x += gs[g].width
+
+# fit the name into the band below the QR; baseline sits so descenders clear the edge
+avail = H - BOTTOM - (QR_TOP + qr_size + TEXT_GAP)
+FONT_SIZE = min(FONT_MAX, avail / ((ymax - ymin) / upm))
+scale = FONT_SIZE / upm
+BASELINE = H - BOTTOM + ymin * scale
 text_w = x * scale
 
 # ---------------- hearts ----------------
@@ -86,6 +96,9 @@ xh = font["OS/2"].sxHeight * scale
 heart_cy = BASELINE - xh * 0.55
 
 total_w = heart_w + GAP + text_w + GAP + heart_w
+if total_w > W - 1.0:  # keep >=0.5 mm side margin for long names
+    GAP = max(0.4, GAP - (total_w - (W - 1.0)) / 2)
+    total_w = heart_w + GAP + text_w + GAP + heart_w
 x0 = (W - total_w) / 2
 
 
