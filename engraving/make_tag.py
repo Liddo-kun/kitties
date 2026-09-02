@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate collar-buckle engraving artwork: QR code + cat name with hearts.
 
-Usage: make_tag.py NAME ALIAS   e.g.  make_tag.py Black MEOBLACK
+Usage: make_tag.py NAME DATA [EC] [OUTBASE]   e.g.  make_tag.py Black TINYURL.COM/MEOBLACK q
 Outputs NAME-tag.svg / .png (dark = engrave, for light-marking-on-dark metal
 use NAME-tag-inverted.*).  Artwork is exactly 16 x 14 mm.
 """
@@ -14,12 +14,13 @@ from fontTools.pens.boundsPen import BoundsPen
 from PIL import Image
 from pyzbar.pyzbar import decode
 
-NAME, ALIAS = sys.argv[1], sys.argv[2]
-DATA = f"IS.GD/{ALIAS}"
+NAME, DATA = sys.argv[1], sys.argv[2]          # e.g. Black TINYURL.COM/MEOBLACK
+EC = sys.argv[3] if len(sys.argv) > 3 else "q"  # error-correction level
+OUT = sys.argv[4] if len(sys.argv) > 4 else NAME.lower()
 FONT = "/usr/share/fonts/truetype/quicksand/Quicksand-Bold.ttf"
 
 W, H = 16.0, 14.0          # mm, engraving area
-MODULE = 0.46              # mm per QR module
+MODULE = None              # mm per QR module (auto: 0.46 for v1, 0.40 for v2)
 QR_TOP = 0.5               # mm quiet zone above QR
 FONT_SIZE = 3.1            # mm (em)
 BASELINE = 13.6            # mm, text baseline
@@ -27,9 +28,10 @@ HEART_H = 1.9              # mm
 GAP = 0.8                  # mm between heart and text
 
 # ---------------- QR ----------------
-qr = segno.make(DATA, error="q", boost_error=False)
-assert qr.version == 1, f"expected version 1, got {qr.version}"
+qr = segno.make(DATA, error=EC, boost_error=False)
+assert qr.version <= 2, f"QR too big (version {qr.version}); shorten the URL"
 n = qr.symbol_size(border=0)[0]
+MODULE = MODULE or {21: 0.46, 25: 0.40}[n]
 qr_size = n * MODULE
 qx = (W - qr_size) / 2
 matrix = [list(row) for row in qr.matrix]
@@ -137,7 +139,7 @@ def svg(inverted):
 """
 
 
-base = NAME.lower()
+base = OUT
 for inv in (False, True):
     fn = f"{base}-tag{'-inverted' if inv else ''}"
     s = svg(inv)
