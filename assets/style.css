@@ -236,3 +236,7 @@ footer .hearts { color: var(--accent); letter-spacing: .2em; }
 .cat-link h2 { margin: 0 0 2px; font-size: 1.25rem; }
 .cat-link p { margin: 0; color: var(--muted); }
 .cat-link .arrow { margin-left: auto; color: var(--muted); font-size: 1.4rem; }
+
+/* plain bullet lists inside cards */
+.card > ul:not(.health) { margin: 0; padding-left: 20px; }
+.card > ul:not(.health) li { margin: 6px 0; }
